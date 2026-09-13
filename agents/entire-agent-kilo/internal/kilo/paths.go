@@ -15,14 +15,14 @@ func (a *Agent) GetSessionDir(repoPath string) (string, error) {
 
 var sessionIDPathSanitizer = regexp.MustCompile(`[^A-Za-z0-9_.-]+`)
 
-// safeSessionID preserves IDs already made only of A-Za-z0-9_.-. Other IDs
+// safeSessionID preserves non-device IDs made only of A-Za-z0-9_.-. Other IDs
 // use a reserved prefix plus a stable hash, so transformed IDs cannot collide
 // with unchanged IDs or collapse onto one another through normalization.
 // Dots are safe here because callers append a filename extension, so even "."
 // and ".." cannot become path segments.
 func safeSessionID(sessionID string) string {
 	safeID := sessionIDPathSanitizer.ReplaceAllString(sessionID, "_")
-	if safeID != "" && safeID == sessionID {
+	if safeID != "" && safeID == sessionID && !isWindowsDeviceName(sessionID) {
 		return safeID
 	}
 	sum := sha256.Sum256([]byte(sessionID))

@@ -297,7 +297,7 @@ func (a *Agent) writeSessionMarker(raw qwenHookInputRaw, sidecarPath string) err
 }
 
 // safeFilename reduces an untrusted session ID to one path component. Safe IDs
-// are unchanged; transformed nonblank IDs use a reserved prefix plus a
+// are unchanged unless they name a Windows device; transformed nonblank IDs use a
 // stable hash so they cannot alias an unchanged ID or another normalized form.
 // Sidecar transcripts and marker files must use the same mapping.
 func safeFilename(name string) string {
@@ -330,7 +330,7 @@ func safeFilename(name string) string {
 	if out == "" {
 		out = stubSessionID
 	}
-	if out == original {
+	if out == original && !isWindowsDeviceName(original) {
 		return out
 	}
 	sum := sha256.Sum256([]byte(original))

@@ -41,7 +41,7 @@ Amp has a TypeScript plugin system with lifecycle events for `agent.start` and `
 
 - Session ID source: Amp `thread.id`.
 - Session directory: `.entire/tmp/amp/`.
-- Session filenames: `<safe-id>.jsonl`, shared by protocol resolution, hook exports, and reads by session ID. IDs containing only `A-Za-z0-9_.-` are preserved; other IDs, including empty IDs, use `~` plus the first 16 SHA-256 bytes as lowercase hex.
+- Session filenames: `<safe-id>.jsonl`, shared by protocol resolution, hook exports, and reads by session ID. Non-device IDs containing only `A-Za-z0-9_.-` are preserved; other IDs, including empty IDs, use `~` plus the first 16 SHA-256 bytes as lowercase hex.
 - Session file format: exported Amp thread JSON, parsed as `Thread` from `internal/amp/types.go`. The binary writes this file on `session.start` and refreshes it on `agent.end`.
 - Resume mechanism: `PLUGINS=all amp threads continue <thread-id>`.
 
@@ -55,6 +55,8 @@ Amp has a TypeScript plugin system with lifecycle events for `agent.start` and `
 - Modified file extraction: `ThreadToolRun.TrackFiles`, tool input path fields (`path`, `filePath`, `filepath`, `file`, `absolutePath`, `paths`, `files`) from known mutating tool calls, and write-result `absolutePath` fields.
 - Token usage extraction: `ThreadMessage.Usage` on exported messages.
 - Unprepared behavior: transcript analyzer, compact transcript, token calculation, and read-session operations require exported `Thread` JSON and return an error if called on a `session_ref` that has not yet been populated by an export.
+
+Session filename portability: Windows reserved device basenames (case-insensitive, including names followed by extensions and COM/LPT superscript-digit forms) use the hash mapping on every OS. This keeps resolver and transcript paths consistent when sessions move between platforms.
 
 ## Protocol Mapping
 
