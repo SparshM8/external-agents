@@ -10,7 +10,7 @@ import (
 )
 
 func (a *Agent) GetSessionDir(repoPath string) (string, error) {
-	return protocol.DefaultSessionDir(repoPath), nil
+	return filepath.Join(protocol.DefaultSessionDir(repoPath), transcriptSubdir), nil
 }
 
 // safePathSessionID preserves IDs already made only of A-Za-z0-9_.-. Other IDs
@@ -31,5 +31,5 @@ func safePathSessionID(sessionID string) string {
 var sessionIDPathSanitizer = regexp.MustCompile(`[^A-Za-z0-9_.-]+`)
 
 func (a *Agent) ResolveSessionFile(sessionDir, sessionID string) string {
-	return filepath.Join(sessionDir, safePathSessionID(sessionID)+".json")
+	return filepath.Join(sessionDir, safePathSessionID(sessionID)+".jsonl")
 }
