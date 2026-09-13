@@ -60,15 +60,16 @@ func TestSessionFileResolversContainUnsafeSessionIDs(t *testing.T) {
 			if got := safeFilename(tt.sessionID); got != safeID {
 				t.Fatalf("safeFilename() is not deterministic: first %q, second %q", safeID, got)
 			}
-			if strings.TrimSpace(tt.sessionID) == "" {
+			switch {
+			case strings.TrimSpace(tt.sessionID) == "":
 				if safeID != stubSessionID {
 					t.Fatalf("blank ID = %q, want %q", safeID, stubSessionID)
 				}
-			} else if tt.unchanged {
+			case tt.unchanged:
 				if safeID != tt.sessionID {
 					t.Fatalf("safeFilename() changed benign ID %q to %q", tt.sessionID, safeID)
 				}
-			} else {
+			default:
 				if safeID == tt.sessionID {
 					t.Fatalf("safeFilename() left unsafe ID unchanged: %q", safeID)
 				}
