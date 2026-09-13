@@ -297,10 +297,14 @@ func (a *Agent) writeSessionMarker(raw qwenHookInputRaw, sidecarPath string) err
 }
 
 // safeFilename reduces an untrusted session ID to one path component. Safe IDs
-// are unchanged; transformed and fallback IDs use a reserved prefix plus a
+// are unchanged; transformed nonblank IDs use a reserved prefix plus a
 // stable hash so they cannot alias an unchanged ID or another normalized form.
 // Sidecar transcripts and marker files must use the same mapping.
 func safeFilename(name string) string {
+	// Missing IDs share the same fallback identity as hooks and GetSessionID.
+	if strings.TrimSpace(name) == "" {
+		return stubSessionID
+	}
 	original := name
 	name = strings.TrimSpace(name)
 	var b strings.Builder

@@ -69,6 +69,9 @@ func TestResolveSessionFileContainsHostileIDs(t *testing.T) {
 		t.Run(sessionID, func(t *testing.T) {
 			safeID := safeFilename(sessionID)
 			wantSafeID := reservedSessionID(sessionID)
+			if strings.TrimSpace(sessionID) == "" {
+				wantSafeID = stubSessionID
+			}
 			if safeID != wantSafeID {
 				t.Fatalf("safeFilename(%q) = %q, want %q", sessionID, safeID, wantSafeID)
 			}
@@ -108,7 +111,6 @@ func TestSafeFilenameSeparatesSanitizationCollisions(t *testing.T) {
 		{`..\..\outside`, "outside"},
 		{"nested/session", "nested_session"},
 		{"a/b", "a:b"},
-		{"", stubSessionID},
 		{".. ", stubSessionID},
 		{".. ", " .."},
 		{"C:outside", "C_outside"},
