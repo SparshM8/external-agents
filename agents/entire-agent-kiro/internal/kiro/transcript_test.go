@@ -116,7 +116,7 @@ func TestQuerySessionIDParsesSQLiteJSON(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	db := createFakeKiroDB(t, home)
 	restore := stubSQLiteRunner(t, func(args ...string) ([]byte, error) {
@@ -146,7 +146,7 @@ func TestQuerySessionIDWorksWithoutSQLite3BinaryOnPath(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("PATH", "")
 
 	dbPath := expectedCLIKiroDBPath(home)
@@ -165,7 +165,7 @@ func TestEnsureCachedTranscriptWritesSQLiteTranscript(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("ENTIRE_CLI_VERSION", "3.4.5")
 
 	stubData := buildTranscript("cli-session", 2)
@@ -206,7 +206,7 @@ func TestEnsureCachedTranscriptWorksWithoutSQLite3BinaryOnPath(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("PATH", "")
 
 	dbPath := expectedCLIKiroDBPath(home)
@@ -232,7 +232,7 @@ func TestEnsureIDETranscriptCopiesLatestWorkspaceSession(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("ENTIRE_CLI_VERSION", "4.5.6")
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
@@ -287,7 +287,7 @@ func TestEnsureIDETranscriptPrefersResolvedIDESessionOverLatest(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("ENTIRE_CLI_VERSION", "4.5.6")
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
@@ -339,7 +339,7 @@ func TestEnsureIDETranscriptFallsBackToLatestWhenIDESessionMissing(t *testing.T)
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("ENTIRE_CLI_VERSION", "4.5.6")
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
@@ -385,7 +385,7 @@ func TestEnsureIDETranscriptOffsetsAreIsolatedPerChat(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -458,7 +458,7 @@ func TestEnsureIDETranscriptRejectsPathTraversal(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("ENTIRE_CLI_VERSION", "4.5.6")
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
@@ -483,7 +483,7 @@ func TestParseHookStopPrefersSQLiteTranscript(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	db := createFakeKiroDB(t, home)
 	restore := stubSQLiteRunner(t, func(args ...string) ([]byte, error) {
@@ -542,7 +542,7 @@ func TestParseHookStopFallsBackToIDETranscript(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("ENTIRE_CLI_VERSION", "4.5.6")
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
@@ -593,7 +593,7 @@ func TestParseHookStopFallsBackToPlaceholderTranscript(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -678,6 +678,9 @@ func kiroExtensionTestDir(t *testing.T, home string) string {
 
 func createIDEWorkspaceSessionsDir(t *testing.T, home string, cwd string) string {
 	t.Helper()
+	if runtimeGOOS == osWindows {
+		cwd = normalizeWindowsCWDForKiro(cwd)
+	}
 	encoded := strings.ReplaceAll(base64.StdEncoding.EncodeToString([]byte(cwd)), "=", "_")
 	dir := filepath.Join(kiroExtensionTestDir(t, home), "workspace-sessions", encoded)
 	if err := os.MkdirAll(dir, 0o750); err != nil {
@@ -701,7 +704,7 @@ func TestKiroCLIDataDBPathWindowsUsesLocalAppData(t *testing.T) {
 	withRuntimeGOOS(t, "windows")
 
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("LOCALAPPDATA", filepath.Join(home, "LocalAppData"))
 
 	path, err := kiroCLIDataDBPath()
@@ -718,7 +721,7 @@ func TestKiroExtensionStorageDirWindowsUsesAppData(t *testing.T) {
 	withRuntimeGOOS(t, "windows")
 
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("APPDATA", filepath.Join(home, "RoamingAppData"))
 
 	dir, err := kiroExtensionStorageDir()
@@ -739,7 +742,7 @@ func TestIDEWorkspaceSessionsDirWindowsNormalizesForwardSlashCwd(t *testing.T) {
 	withRuntimeGOOS(t, "windows")
 
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("APPDATA", filepath.Join(home, "RoamingAppData"))
 
 	forwardSlashCWD := "C:/Users/alisha/testrepo"
@@ -770,7 +773,7 @@ func TestIDEWorkspaceSessionsDirWindowsLowercasesDriveLetter(t *testing.T) {
 	withRuntimeGOOS(t, "windows")
 
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	t.Setenv("APPDATA", filepath.Join(home, "RoamingAppData"))
 
 	upperCWD := `C:\Users\alisha\testrepo`
@@ -1018,7 +1021,7 @@ func TestEnsureCachedTranscriptTrimsWithOffset(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	transcriptData := buildTranscript("conv-1", 8)
 
@@ -1064,7 +1067,7 @@ func TestEnsureCachedTranscriptFirstCapture(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	transcriptData := buildTranscript("conv-1", 4)
 
@@ -1104,7 +1107,7 @@ func TestEnsureCachedTranscriptConversationIDChange(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	transcriptData := buildTranscript("new-conv", 3)
 
@@ -1154,7 +1157,7 @@ func TestEnsureCachedTranscriptOffsetExceedsLength(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	transcriptData := buildTranscript("conv-1", 3)
 
@@ -1197,7 +1200,7 @@ func TestEnsureCachedTranscriptNoNewEntriesReturnsFull(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	transcriptData := buildTranscript("conv-1", 4)
 
@@ -1242,7 +1245,7 @@ func TestEnsureCachedTranscriptQueriesByConversationID(t *testing.T) {
 	repoRoot := t.TempDir()
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	db := createFakeKiroDB(t, home)
 	var capturedQuery string
@@ -1273,7 +1276,7 @@ func TestEnsureIDETranscriptWithModifiedBase64Encoding(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1314,7 +1317,7 @@ func TestCaptureTranscriptFallsToIDEWhenCLIUnavailable(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1364,7 +1367,7 @@ func TestCaptureTranscriptPrefersIDEOverCLI(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1446,7 +1449,7 @@ func TestEnsureIDETranscriptMergesToolCalls(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1513,7 +1516,7 @@ func TestEnsureIDETranscriptWithoutToolCalls(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1670,7 +1673,7 @@ func TestExtractIDEExecutionIDs(t *testing.T) {
 
 func TestFindExecutionLogsForSession(t *testing.T) {
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	// Create a fake workspace hash dir with execution logs
 	workspaceHash := "abcd1234abcd1234abcd1234abcd1234"
@@ -1709,7 +1712,7 @@ func TestFindExecutionLogsForSession(t *testing.T) {
 
 func TestFindExecutionLogsForSession_NoMatch(t *testing.T) {
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 
 	workspaceHash := "abcd1234abcd1234abcd1234abcd1234"
 	execLogsDir := createExecLogsDir(t, home, workspaceHash)
@@ -1793,7 +1796,7 @@ func TestEnsureIDETranscriptWithExecutionLogs(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1858,7 +1861,7 @@ func TestEnsureIDETranscriptFallsBackToToolCallsWhenNoExecLogs(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1906,7 +1909,7 @@ func TestEnsureIDETranscriptTrimsWithOffset(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -1971,7 +1974,7 @@ func TestEnsureIDETranscriptFirstCapture(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
@@ -2022,7 +2025,7 @@ func TestEnsureIDETranscriptNoNewEntriesSucceeds(t *testing.T) {
 	home := t.TempDir()
 	cwd := filepath.Join(repoRoot, "workspace")
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
-	t.Setenv("HOME", home)
+	setupTestKiroHome(t, home)
 	if err := os.MkdirAll(cwd, 0o750); err != nil {
 		t.Fatalf("mkdir cwd: %v", err)
 	}
