@@ -239,11 +239,14 @@ func TestEnsureIDETranscriptCopiesLatestWorkspaceSession(t *testing.T) {
 	}
 
 	sessionsDir := createIDEWorkspaceSessionsDir(t, home, cwd)
-	index := `[
-  {"sessionId":"older","title":"Old","dateCreated":"2026-01-01T00:00:00Z","workspaceDirectory":"` + cwd + `"},
-  {"sessionId":"latest","title":"New","dateCreated":"2026-02-01T00:00:00Z","workspaceDirectory":"` + cwd + `"}
-]`
-	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), []byte(index), 0o600); err != nil {
+	index, err := json.Marshal([]map[string]string{
+		{"sessionId": "older", "title": "Old", "dateCreated": "2026-01-01T00:00:00Z", "workspaceDirectory": cwd},
+		{"sessionId": "latest", "title": "New", "dateCreated": "2026-02-01T00:00:00Z", "workspaceDirectory": cwd},
+	})
+	if err != nil {
+		t.Fatalf("marshal sessions index: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), index, 0o600); err != nil {
 		t.Fatalf("write sessions.json: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(sessionsDir, "older.json"), []byte(`{"history":[{"message":{"role":"assistant","content":"old"}}]}`), 0o600); err != nil {
@@ -293,11 +296,14 @@ func TestEnsureIDETranscriptPrefersResolvedIDESessionOverLatest(t *testing.T) {
 	sessionsDir := createIDEWorkspaceSessionsDir(t, home, cwd)
 	// "latest" is newer by dateCreated, but the resolver tells us the active
 	// chat is "older" (e.g. the user is back in an older tab).
-	index := `[
-  {"sessionId":"older","title":"Old","dateCreated":"2026-01-01T00:00:00Z","workspaceDirectory":"` + cwd + `"},
-  {"sessionId":"latest","title":"New","dateCreated":"2026-02-01T00:00:00Z","workspaceDirectory":"` + cwd + `"}
-]`
-	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), []byte(index), 0o600); err != nil {
+	index, err := json.Marshal([]map[string]string{
+		{"sessionId": "older", "title": "Old", "dateCreated": "2026-01-01T00:00:00Z", "workspaceDirectory": cwd},
+		{"sessionId": "latest", "title": "New", "dateCreated": "2026-02-01T00:00:00Z", "workspaceDirectory": cwd},
+	})
+	if err != nil {
+		t.Fatalf("marshal sessions index: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), index, 0o600); err != nil {
 		t.Fatalf("write sessions.json: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(sessionsDir, "older.json"), []byte(`{"history":[{"message":{"role":"assistant","content":"older-chat"}}]}`), 0o600); err != nil {
@@ -340,8 +346,14 @@ func TestEnsureIDETranscriptFallsBackToLatestWhenIDESessionMissing(t *testing.T)
 	}
 
 	sessionsDir := createIDEWorkspaceSessionsDir(t, home, cwd)
-	index := `[{"sessionId":"latest","title":"New","dateCreated":"2026-02-01T00:00:00Z","workspaceDirectory":"` + cwd + `"}]`
-	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), []byte(index), 0o600); err != nil {
+
+	index, err := json.Marshal([]map[string]string{
+		{"sessionId": "latest", "title": "New", "dateCreated": "2026-02-01T00:00:00Z", "workspaceDirectory": cwd},
+	})
+	if err != nil {
+		t.Fatalf("marshal sessions index: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), index, 0o600); err != nil {
 		t.Fatalf("write sessions.json: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(sessionsDir, "latest.json"), []byte(`{"history":[{"message":{"role":"assistant","content":"latest-chat"}}]}`), 0o600); err != nil {
@@ -500,7 +512,11 @@ func TestParseHookStopPrefersSQLiteTranscript(t *testing.T) {
 
 	seedSessionIDCache(t, repoRoot, "stable-session")
 
-	event, err := New().ParseHook(HookNameStop, []byte(`{"cwd":"`+repoRoot+`"}`))
+	input, err := json.Marshal(map[string]string{"cwd": repoRoot})
+	if err != nil {
+		t.Fatalf("marshal hook input: %v", err)
+	}
+	event, err := New().ParseHook(HookNameStop, input)
 	if err != nil {
 		t.Fatalf("ParseHook(stop) error = %v", err)
 	}
@@ -538,8 +554,14 @@ func TestParseHookStopFallsBackToIDETranscript(t *testing.T) {
 	defer restore()
 
 	sessionsDir := createIDEWorkspaceSessionsDir(t, home, cwd)
-	index := `[{"sessionId":"ide-session","title":"IDE","dateCreated":"2026-02-01T00:00:00Z","workspaceDirectory":"` + cwd + `"}]`
-	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), []byte(index), 0o600); err != nil {
+
+	index, err := json.Marshal([]map[string]string{
+		{"sessionId": "ide-session", "title": "IDE", "dateCreated": "2026-02-01T00:00:00Z", "workspaceDirectory": cwd},
+	})
+	if err != nil {
+		t.Fatalf("marshal sessions index: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), index, 0o600); err != nil {
 		t.Fatalf("write sessions.json: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(sessionsDir, "ide-session.json"), []byte(`{"history":[{"message":{"role":"assistant","content":"ide"}}]}`), 0o600); err != nil {
@@ -548,7 +570,11 @@ func TestParseHookStopFallsBackToIDETranscript(t *testing.T) {
 
 	seedSessionIDCache(t, repoRoot, "stable-session")
 
-	event, err := New().ParseHook(HookNameStop, []byte(`{"cwd":"`+cwd+`"}`))
+	input, err := json.Marshal(map[string]string{"cwd": cwd})
+	if err != nil {
+		t.Fatalf("marshal hook input: %v", err)
+	}
+	event, err := New().ParseHook(HookNameStop, input)
 	if err != nil {
 		t.Fatalf("ParseHook(stop) error = %v", err)
 	}
@@ -579,7 +605,11 @@ func TestParseHookStopFallsBackToPlaceholderTranscript(t *testing.T) {
 
 	seedSessionIDCache(t, repoRoot, "stable-session")
 
-	event, err := New().ParseHook(HookNameStop, []byte(`{"cwd":"`+cwd+`"}`))
+	input, err := json.Marshal(map[string]string{"cwd": cwd})
+	if err != nil {
+		t.Fatalf("marshal hook input: %v", err)
+	}
+	event, err := New().ParseHook(HookNameStop, input)
 	if err != nil {
 		t.Fatalf("ParseHook(stop) error = %v", err)
 	}
@@ -1250,8 +1280,14 @@ func TestEnsureIDETranscriptWithModifiedBase64Encoding(t *testing.T) {
 
 	// Create sessions dir using the REAL IDE encoding (= replaced with _)
 	sessionsDir := createIDEWorkspaceSessionsDir(t, home, cwd)
-	index := `[{"sessionId":"ide-delete-session","title":"delete files","dateCreated":"2026-03-21T09:05:00Z","workspaceDirectory":"` + cwd + `"}]`
-	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), []byte(index), 0o600); err != nil {
+
+	index, err := json.Marshal([]map[string]string{
+		{"sessionId": "ide-delete-session", "title": "delete files", "dateCreated": "2026-03-21T09:05:00Z", "workspaceDirectory": cwd},
+	})
+	if err != nil {
+		t.Fatalf("marshal sessions index: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sessionsDir, "sessions.json"), index, 0o600); err != nil {
 		t.Fatalf("write sessions.json: %v", err)
 	}
 	ideTranscript := `{"history":[{"message":{"role":"user","content":"please delete all the hello files"}},{"message":{"role":"assistant","content":"On it."}}]}`
@@ -1302,7 +1338,11 @@ func TestCaptureTranscriptFallsToIDEWhenCLIUnavailable(t *testing.T) {
 
 	seedSessionIDCache(t, repoRoot, "test-session")
 
-	event, err := New().ParseHook(HookNameStop, []byte(`{"cwd":"`+cwd+`"}`))
+	input, err := json.Marshal(map[string]string{"cwd": cwd})
+	if err != nil {
+		t.Fatalf("marshal hook input: %v", err)
+	}
+	event, err := New().ParseHook(HookNameStop, input)
 	if err != nil {
 		t.Fatalf("ParseHook(stop) error = %v", err)
 	}
@@ -1356,7 +1396,11 @@ func TestCaptureTranscriptPrefersIDEOverCLI(t *testing.T) {
 
 	seedSessionIDCache(t, repoRoot, "test-session")
 
-	event, err := New().ParseHook(HookNameStop, []byte(`{"cwd":"`+cwd+`"}`))
+	input, err := json.Marshal(map[string]string{"cwd": cwd})
+	if err != nil {
+		t.Fatalf("marshal hook input: %v", err)
+	}
+	event, err := New().ParseHook(HookNameStop, input)
 	if err != nil {
 		t.Fatalf("ParseHook(stop) error = %v", err)
 	}
