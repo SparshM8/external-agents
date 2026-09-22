@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -15,7 +16,11 @@ import (
 func TestEncodeRepoCWD(t *testing.T) {
 	repo := "/Users/test/project"
 	encoded := encodeRepoCWD(repo)
-	if encoded != "%2FUsers%2Ftest%2Fproject" {
+	want := "%2FUsers%2Ftest%2Fproject"
+	if runtime.GOOS == "windows" {
+		want = "%5CUsers%5Ctest%5Cproject"
+	}
+	if encoded != want {
 		t.Fatalf("unexpected encoded cwd: %q", encoded)
 	}
 }
@@ -24,7 +29,11 @@ func TestNativeTranscriptPath(t *testing.T) {
 	t.Setenv("GROK_HOME", t.TempDir())
 	repo := "/Users/test/project"
 	path := nativeTranscriptPath(repo, "session-123")
-	wantSuffix := filepath.Join("sessions", "%2FUsers%2Ftest%2Fproject", "session-123", "chat_history.jsonl")
+	encoded := "%2FUsers%2Ftest%2Fproject"
+	if runtime.GOOS == "windows" {
+		encoded = "%5CUsers%5Ctest%5Cproject"
+	}
+	wantSuffix := filepath.Join("sessions", encoded, "session-123", "chat_history.jsonl")
 	if !strings.HasSuffix(path, wantSuffix) {
 		t.Fatalf("unexpected transcript path %q", path)
 	}

@@ -2,9 +2,12 @@ package kilo
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -287,6 +290,11 @@ func TestInstallHooksRefusesSymlinkWithoutForce(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := os.Symlink(outside, pluginPath); err != nil {
+		// ERROR_PRIVILEGE_NOT_HELD is Windows error 1314.
+		const privilegeNotHeld = syscall.Errno(1314)
+		if runtime.GOOS == "windows" && (os.IsPermission(err) || errors.Is(err, privilegeNotHeld)) {
+			t.Skipf("symlink creation requires Windows privileges: %v", err)
+		}
 		t.Fatal(err)
 	}
 
@@ -314,6 +322,10 @@ func TestInstallHooksRefusesSymlinkWithoutForce(t *testing.T) {
 }
 
 func TestInstallHooksForceRepairsPermissionsForIdenticalContent(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows does not implement POSIX file permission bits")
+	}
+
 	repo := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repo)
 	a := New()
