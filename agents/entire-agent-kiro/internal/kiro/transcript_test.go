@@ -472,6 +472,8 @@ func TestParseHookStopPrefersSQLiteTranscript(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("ENTIRE_REPO_ROOT", repoRoot)
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("LOCALAPPDATA", filepath.Join(home, "AppData", "Local"))
 
 	db := createFakeKiroDB(t, home)
 	restore := stubSQLiteRunner(t, func(args ...string) ([]byte, error) {
@@ -500,7 +502,11 @@ func TestParseHookStopPrefersSQLiteTranscript(t *testing.T) {
 
 	seedSessionIDCache(t, repoRoot, "stable-session")
 
-	event, err := New().ParseHook(HookNameStop, []byte(`{"cwd":"`+repoRoot+`"}`))
+	payload, err := json.Marshal(map[string]string{"cwd": repoRoot})
+	if err != nil {
+		t.Fatal(err)
+	}
+	event, err := New().ParseHook(HookNameStop, payload)
 	if err != nil {
 		t.Fatalf("ParseHook(stop) error = %v", err)
 	}
