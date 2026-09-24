@@ -348,14 +348,11 @@ func TestTranscriptAnalysisAndCompactTranscript(t *testing.T) {
 		`{"type":"assistant","content":"","tool_calls":[{"id":"tool-1","name":"Write","arguments":"{\"path\":\"hello.txt\"}"}]}`,
 		`{"type":"assistant","content":"Created hello.txt"}`,
 	}, "\n")+"\n")
-	input, err := json.Marshal(map[string]string{
-		"session_id": "grok-test",
-		"cwd":        repo,
-	})
+	payload, err := json.Marshal(map[string]string{"session_id": "grok-test", "cwd": repo})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := agent.ParseHook(HookNameSessionStart, input); err != nil {
+	if _, err := agent.ParseHook(HookNameSessionStart, payload); err != nil {
 		t.Fatal(err)
 	}
 	markerPath := filepath.Join(repo, ".entire", "tmp", "grok-test.json")
